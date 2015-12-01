@@ -8,7 +8,7 @@
 
 import UIKit
 
-class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate, UIPickerViewDelegate, UIPickerViewDataSource {
+class MemeViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate, UIPickerViewDelegate, UIPickerViewDataSource {
     
     //MARK:- outlets and vars
     @IBOutlet weak var imageView: UIImageView!
@@ -21,7 +21,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     @IBOutlet weak var infoLabel: UILabel!
     @IBOutlet weak var fontPicker: UIPickerView!
     @IBOutlet weak var fontButton: UIBarButtonItem!
-    var memed:Meme!
     var fontName:[String] = []
     var userSelectedFont:String = ""
     
@@ -83,7 +82,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         let imagePicker = UIImagePickerController()
         imagePicker.delegate = self
         imagePicker.sourceType = UIImagePickerControllerSourceType.Camera
-        self.presentViewController(imagePicker, animated: true, completion: nil)
+        presentViewController(imagePicker, animated: true, completion: nil)
     }
     
     //Image from Album
@@ -93,7 +92,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         let imagePicker = UIImagePickerController()
         imagePicker.delegate = self
         imagePicker.sourceType = UIImagePickerControllerSourceType.PhotoLibrary
-        self.presentViewController(imagePicker, animated: true, completion: nil)
+        presentViewController(imagePicker, animated: true, completion: nil)
             fontPickerState(true)
     }
     
@@ -136,9 +135,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     // hide keyboard when done editing
     func textFieldShouldReturn(textField: UITextField) -> Bool {
-        textField.endEditing(true)
+        textField.resignFirstResponder()
         navBarHidden(false)
-        return false
+        return true
     }
     
     //Set imageview
@@ -147,23 +146,21 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             imageView.image = image
         }
         enableDisableOutlets()
-        self.dismissViewControllerAnimated(true, completion: nil)
+        dismissViewControllerAnimated(true, completion: nil)
     }
     
     //Move current view up as keyboard appears
     func keyboardWillAppear(notification: NSNotification){
         if bottomTextField.isFirstResponder() {
            navBarHidden(true)
-            self.view.frame.origin.y -= getKeyBoardHeight(notification)
-        } else if topTextField.isFirstResponder() {
-            self.view.frame.origin.y = 0
+            view.frame.origin.y -= getKeyBoardHeight(notification)
         }
     }
     
     //Shift view down when keyboard is dismissed
     func keyboardWillHideNotification(){
-        if bottomTextField.isFirstResponder() {
-            self.view.frame.origin.y = 0
+        if topTextField.isFirstResponder() {
+            view.frame.origin.y = 0
         }
     }
     
@@ -177,7 +174,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     //subscribe to notification when keyboard appears
     func subscribeToKeyboardNotification(){
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "keyboardWillAppear:", name: UIKeyboardWillShowNotification, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "keyboardWillHideNotification", name: UIKeyboardWillHideNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "r:", name: UIKeyboardWillHideNotification, object: nil)
     }
 
     //unsbscribe to notification
@@ -204,11 +201,15 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         return memedImage
     }
     
-    func saveMeme(){
-        memed = Meme(tText: topTextField.text!, bText: bottomTextField.text!, oImage: imageView.image!, meme: generateMemedImage())
+    func saveMeme() {
+        let meme = Meme(toptext: topTextField.text!, bottomText: bottomTextField.text!, originalImage: imageView.image!, memeImage: generateMemedImage())
+        
+        let object = UIApplication.sharedApplication().delegate
+        let appDelegate = object as! AppDelegate
+        appDelegate.memes.append(meme)
     }
     
-    func enableDisableOutlets(){
+    func enableDisableOutlets() {
         shareBUtton.enabled = true
         topTextField.hidden = false
         bottomTextField.hidden = false
